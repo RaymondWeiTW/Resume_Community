@@ -1,0 +1,9 @@
+# --- Mac System Files ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 排除 Mac 自訂資料夾圖示 (Icon)
+Icon?
+
+
