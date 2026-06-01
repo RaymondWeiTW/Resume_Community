@@ -1,9 +1,55 @@
-# --- Mac System Files ---
-.DS_Store
-.AppleDouble
-.LSOverride
+
 
 # 排除 Mac 自訂資料夾圖示 (Icon)
 Icon?
 
+# === Target/Build Outputs ===
+target/
+build/
+*.jar
+*.war
+*.ear
+*.class
 
+# === IDE Settings ===
+# Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+*.launch
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+
+# === Build Tools ===
+.gradle/
+/gradle/wrapper/gradle-wrapper.jar
+/mvnw.cmd
+/.mvn/wrapper/maven-wrapper.jar
+
+# === Logs & System Files ===
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# === Configuration & Secrets ===
+.env
+*.properties
+*.yml
+# 注意：如果 application.yml 包含資料庫密碼，建議排除並改用範本
+# !application.yml
