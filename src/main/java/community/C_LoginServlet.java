@@ -27,7 +27,7 @@ public class C_LoginServlet extends HttpServlet {
         // 3. 呼叫 DAO 去 Aiven MySQL 驗證
         C_User loginUser = userDao.fn_loginCheck(usernameStr, passwordStr);
        
-        /*   ===新增JWT前===
+        /* ===新增JWT前===
         if (loginUser != null) {
             // 登入成功！把使用者資訊存入 Session 中（讓後續頁面知道是誰登入）
             request.getSession().setAttribute("currentUser", loginUser);
@@ -67,20 +67,31 @@ public class C_LoginServlet extends HttpServlet {
              * 完美對應到工業系統中常見的：廠長/工程師/一般作業員的分級操作介面控管。
              */
             String role = loginUser.fn_getRole();
-            String targetJsp = "/WEB-INF/jsp/visitor_index.jsp";
             
+            // 【核心修正點】：改走控制器路由，且重導向後必須馬上 return 切斷執行緒，避免與下方舊程式碼衝突
             switch (role) {
-                case "ADMIN": targetJsp = "/WEB-INF/jsp/admin_index.jsp"; break;
-                case "SUPERIVER": targetJsp = "/WEB-INF/jsp/superiver_index.jsp"; break;
-                case "VISITOR": targetJsp = "/WEB-INF/jsp/visitor_index.jsp"; break;
+                case "ADMIN": 
+                    response.sendRedirect(request.getContextPath() + "/view?page=admin_index"); 
+                    return;
+                case "SUPERIVER": 
+                    response.sendRedirect(request.getContextPath() + "/view?page=superiver_index"); 
+                    return;
+                case "VISITOR": 
+                    response.sendRedirect(request.getContextPath() + "/view?page=visitor_index"); 
+                    return;
+                default:
+                    response.sendRedirect(request.getContextPath() + "/index.jsp");
+                    return;
             }
             
             /* 💡 補充註解: 
              * 採用 RequestDispatcher.forward() 進行伺服器端內部轉向。
              * 網址列不會改變，且能安全地將置於 WEB-INF 目錄下的 JSP 頁面隱藏起來，
              * 防止外部使用者繞過 Servlet 直接透過網址列對敏感頁面進行非法存取。
+             * * ( 📝 備忘：現架構已改為走 C_ViewControllerServlet 進行視圖分流，
+             * 故此處的 forward 已被上方 switch 的 return 完美避開，保留此處僅供歷史註解研讀。 )
              */
-            request.getRequestDispatcher(targetJsp).forward(request, response);
+            // request.getRequestDispatcher(targetJsp).forward(request, response);
             
         } else {
             // 登入失敗：帶回錯誤訊息並彈回登入頁

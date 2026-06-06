@@ -15,7 +15,7 @@ public class C_JWTUtils {
 
     // Token 有效期限
     // 60 * 1000 = 60,000 毫秒 = 1 分鐘
-    private static final long EXPIRE_TIME = 60 * 1000;
+    private static final long EXPIRE_TIME = 60 * 1000 ;
 
     /**
      * 生成 JWT Token (1分鐘有效)

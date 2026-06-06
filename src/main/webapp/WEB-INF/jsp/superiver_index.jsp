@@ -2,14 +2,13 @@
 <%@ page import="community.C_JWTUtils" %>
 <%@ page import="com.auth0.jwt.interfaces.DecodedJWT" %>
 <%
-    // 【後端驗證】
+    // 【後端 JWT 驗證機制】
     String token = (String) session.getAttribute("userToken");
     DecodedJWT decoded = C_JWTUtils.fn_verifyToken(token);
-
     if (token == null || decoded == null) {
         session.removeAttribute("userToken");
         session.removeAttribute("currentUser");
-        request.setAttribute("errorMsg", "您的 JWT 憑證已過期（滿1分鐘）或未登入，請重新登入！");
+        request.setAttribute("errorMsg", "憑證已過期或未登入，請重新登入！");
         request.getRequestDispatcher("/index.jsp").forward(request, response);
         return;
     }
@@ -17,21 +16,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta charset="UTF-8">
-<title>SUPERIVER 物業經理面版</title>
+<title>物業管理首頁 - 儷府國宅</title>
 <script>
-    let timeLeft = 60; 
-    let countdown;     
-    let lastRefreshTime = 0; 
-
+    let timeLeft = 60; let countdown; let lastRefreshTime = 0;
     function startTimer() {
         const timerElement = document.getElementById("timer");
-        if (countdown) clearInterval(countdown); 
-        
+        if (countdown) clearInterval(countdown);
         countdown = setInterval(function() {
             timeLeft--;
             if (timerElement) timerElement.innerText = timeLeft;
-            
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 alert("您已久未操作，登入時效已過期，將返回登入畫面！");
@@ -39,49 +34,66 @@
             }
         }, 1000);
     }
-
     function silentRefreshJWT() {
         let currentTime = Date.now();
-        if (currentTime - lastRefreshTime < 10000) {
-            return; 
-        }
+        if (currentTime - lastRefreshTime < 10000) return;
         lastRefreshTime = currentTime;
-
-        fetch('${pageContext.request.contextPath}/RefreshTokenServlet', {
-            method: 'POST'
-        })
+        fetch('${pageContext.request.contextPath}/RefreshTokenServlet', { method: 'POST' })
         .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                timeLeft = 60; 
-                console.log("偵測到物業經理操作中，已於背景自動重置 JWT 安全時效。");
-            }
-        })
-        .catch(error => console.error('Silent refresh failed:', error));
+        .then(data => { if (data.success) { timeLeft = 60; console.log("物業人員操作中，JWT時效已重置。"); } })
+        .catch(error => console.error(error));
     }
-
     function setupActivityListeners() {
-        const events = ['mousemove', 'click', 'keydown', 'scroll'];
-        events.forEach(function(eventType) {
-            window.addEventListener(eventType, function() {
-                silentRefreshJWT();
-            });
-        });
+        ['mousemove', 'click', 'keydown', 'scroll'].forEach(ev => window.addEventListener(ev, silentRefreshJWT));
     }
-
-    window.onload = function() {
-        startTimer();
-        setupActivityListeners();
-    };
+    window.onload = function() { startTimer(); setupActivityListeners(); };
 </script>
 </head>
-<body>
-    <h1>歡迎進入 SUPERIVER 物業經理頁面</h1>
-    
-    <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; display: inline-block; border-radius: 5px;">
-        ⏳ JWT 安全憑證剩餘有效時間：<span id="timer" style="color:red; font-weight:bold; font-size:20px;">60</span> 秒
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
+
+<!-- 上方主導覽列 -->
+    <div style=
+    "display: flex; align-items: center; gap: 15px; display: inline-flex; 
+    background:#28a745; color: white; padding:15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    <div class="icon-wrapper" id="notificationIcon">
+            <!-- 圖標 -->
+            <i class="fa-solid fa-user-ninja"></i>
+
+            <!-- 紅色提示點 -->
+            <span class="badge"></span>
+        </div>
+    <strong style="font-size: 18px;">[儷府國宅] 管理者</strong>
+        <span style="margin-left: 20px;">
+            <a href="${pageContext.request.contextPath}/view?page=visitor_index" style="color: white; font-weight: bold; text-decoration: none; margin-right: 12px;"><i class="fa-solid fa-house-chimney"></i></a> 
+             <a href="${pageContext.request.contextPath}/index.jsp" style="color: white; text-decoration: none;"><i class="fa-solid fa-arrow-right-from-bracket"></i></a> 
+        </span>
+        <span style="float:right; background:#fff3cd; color: #856404; padding:4px 10px; border-radius: 4px; font-size: 14px;">
+            ⏳ JWT 剩餘時間：<span id="timer" style="color:red; font-weight:bold;">60</span> 秒
+        </span>
     </div>
-    
-    <p>您好，物業經理！只要您有在畫面上進行編輯、滑動或點擊，系統將確保您的登入狀態不中斷。</p>
+
+
+    <div style="display: flex; min-height: calc(100vh - 60px);">
+        <div style="width: 220px; background: #f8f9fa; padding: 20px; border-right: 1px solid #dee2e6;">
+            <h3 style="color: #495057; font-size: 16px; border-bottom: 2px solid #dee2e6; padding-bottom: 8px;">物業功能選單</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; line-height: 2.5;">
+<li><a href="${pageContext.request.contextPath}/view?page=superiver_index" style="color: #007bff; text-decoration: none;margin-right: 12px;"><i class="fa-solid fa-calendar"></i>&nbsp;排班行事曆</a></li>
+                <li><a href="${pageContext.request.contextPath}/view?page=superiver_broadcast" style="color: #495057; text-decoration: none;margin-right: 12px; font-weight: bold;"><i class="fa-solid fa-microphone-lines"></i>&nbsp;公告編寫</a></li>
+                <li><a href="${pageContext.request.contextPath}/view?page=superiver_package" style="color: #007bff; text-decoration: none;margin-right: 12px;"> <i class="fa-solid fa-envelopes-bulk"></i>&nbsp;包裹收發</a></li>
+                <li><a href="${pageContext.request.contextPath}/view?page=superiver_fix" style="color: #007bff; text-decoration: none;margin-right: 12px;"><i class="fa-solid fa-screwdriver-wrench"></i>&nbsp;報修彙整</a></li>
+            </ul>
+        </div>
+
+        <div style="flex: 1; padding: 30px;">
+            <h2>📅 (首頁) 物業人員排班行事曆</h2>
+            <p style="color: #666;">管理員與物業經理每日排班時程規劃看板。</p>
+            
+            <div style="border: 1px solid #ccc; padding: 30px; background: #fafafa; text-align: center; margin-top:20px; border-radius: 4px;">
+                <p style="font-size: 18px; font-weight: bold; color: #555;">🗓️ 【排班行事曆網格區域】 🗓️</p>
+                <p style="color: #777;">（週一至週五：早班 Aiven / 晚班 Raymond Wei）</p>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
